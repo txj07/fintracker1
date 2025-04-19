@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import TransactionForm from 'C:/Users/ABLE/Desktop/fintracker/watch-shop-blog/src/TransactionForm.jsx';
-import TransactionList from 'C:/Users/ABLE/Desktop/fintracker/watch-shop-blog/src/TransactionList.jsx';
-import ExpenseChart from 'C:/Users/ABLE/Desktop/fintracker/watch-shop-blog/src/ExpenseChart.jsx';
-import IncomeChart from 'C:/Users/ABLE/Desktop/fintracker/watch-shop-blog/src/IncomeChart.jsx';
-import CategoryChart from 'C:/Users/ABLE/Desktop/fintracker/watch-shop-blog/src/CategoryChart.jsx';
-import Dashboard from 'C:/Users/ABLE/Desktop/fintracker/watch-shop-blog/src/Dashboard.jsx';
+import TransactionForm from './TransactionForm.jsx';
+import TransactionList from './TransactionList.jsx';
+import ExpenseChart from './ExpenseChart.jsx';
+import IncomeChart from './IncomeChart.jsx';
+import CategoryChart from './CategoryChart.jsx';
+import Dashboard from './Dashboard.jsx';
 
 function App() {
   const [transactions, setTransactions] = useState([]);
