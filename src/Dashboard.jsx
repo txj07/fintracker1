@@ -4,21 +4,31 @@ import { Pie } from 'react-chartjs-2';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-const Dashboard = ({ transactions }) => {
+const Dashboard = ({ transactions, budgets }) => {
+  const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+
   // Calculate totals
   const totalExpenses = transactions
-    .filter(t => t.type === 'expense')
+    .filter((t) => t.type === 'expense')
     .reduce((sum, t) => sum + t.amount, 0);
 
   const totalIncome = transactions
-    .filter(t => t.type === 'income')
+    .filter((t) => t.type === 'income')
     .reduce((sum, t) => sum + t.amount, 0);
 
   const balance = totalIncome - totalExpenses;
 
+  // Calculate budget and spending for current month
+  const currentBudgets = budgets.filter((b) => b.month === currentMonth);
+  const currentExpenses = transactions.filter(
+    (t) => t.type === 'expense' && t.date.slice(0, 7) === currentMonth
+  );
+  const totalBudgeted = currentBudgets.reduce((sum, b) => sum + b.amount, 0);
+  const totalSpent = currentExpenses.reduce((sum, t) => sum + t.amount, 0);
+
   // Get category breakdown
   const expenseCategories = transactions
-    .filter(t => t.type === 'expense')
+    .filter((t) => t.type === 'expense')
     .reduce((acc, t) => {
       const category = t.category || 'Uncategorized';
       acc[category] = (acc[category] || 0) + t.amount;
@@ -39,7 +49,7 @@ const Dashboard = ({ transactions }) => {
 
   // Get most recent transactions (last 5)
   const recentTransactions = [...transactions]
-  .sort((a, b) => b.id - a.id)  // Sort by ID descending (newest first)
+    .sort((a, b) => b.id - a.id)
     .slice(0, 5);
 
   return (
@@ -47,7 +57,7 @@ const Dashboard = ({ transactions }) => {
       {/* Summary Cards */}
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: 'repeat(3, 1fr)', 
+        gridTemplateColumns: 'repeat(4, 1fr)',
         gap: '20px', 
         marginBottom: '30px'
       }}>
@@ -91,6 +101,23 @@ const Dashboard = ({ transactions }) => {
             ₹{balance.toFixed(2)}
           </p>
         </div>
+
+        <div style={{ 
+          background: '#fff', 
+          padding: '20px', 
+          borderRadius: '8px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+        }}>
+          <h3 style={{ marginTop: 0, color: '#555' }}>Budget Status</h3>
+          <p style={{ 
+            fontSize: '28px', 
+            fontWeight: 'bold', 
+            color: totalSpent > totalBudgeted ? '#F44336' : '#4CAF50',
+            margin: '10px 0 0'
+          }}>
+            ₹{totalSpent.toFixed(2)} / ₹{totalBudgeted.toFixed(2)}
+          </p>
+        </div>
       </div>
 
       {/* Charts and Recent Transactions */}
@@ -127,7 +154,7 @@ const Dashboard = ({ transactions }) => {
         </div>
 
         <div style={{ 
-          background: '#000000', 
+          background: '#fff',
           padding: '20px', 
           borderRadius: '8px',
           boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
@@ -144,36 +171,36 @@ const Dashboard = ({ transactions }) => {
                 </tr>
               </thead>
               <tbody>
-  {recentTransactions.map((t, i) => (
-    <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
-      <td style={{ padding: '12px 8px' }}>
-        {t.date ? new Date(t.date).toLocaleDateString() : 'N/A'}
-      </td>
-      <td style={{ padding: '12px 8px' }}>
-        {t.category || 'Uncategorized'}
-      </td>
-      <td style={{ 
-        padding: '12px 8px', 
-        textAlign: 'right',
-        color: t.type === 'income' ? '#4CAF50' : '#F44336',
-        fontWeight: '500'
-      }}>
-        ₹{t.amount?.toFixed(2) || '0.00'}
-      </td>
-      <td style={{ padding: '12px 8px' }}>
-        <span style={{
-          background: t.type === 'income' ? '#E8F5E9' : '#FFEBEE',
-          color: t.type === 'income' ? '#4CAF50' : '#F44336',
-          padding: '4px 8px',
-          borderRadius: '4px',
-          fontSize: '0.85em'
-        }}>
-          {t.type || 'N/A'}
-        </span>
-      </td>
-    </tr>
-  ))}
-</tbody>
+                {recentTransactions.map((t, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
+                    <td style={{ padding: '12px 8px' }}>
+                      {t.date ? new Date(t.date).toLocaleDateString() : 'N/A'}
+                    </td>
+                    <td style={{ padding: '12px 8px' }}>
+                      {t.category || 'Uncategorized'}
+                    </td>
+                    <td style={{ 
+                      padding: '12px 8px', 
+                      textAlign: 'right',
+                      color: t.type === 'income' ? '#4CAF50' : '#F44336',
+                      fontWeight: '500'
+                    }}>
+                      ₹{t.amount?.toFixed(2) || '0.00'}
+                    </td>
+                    <td style={{ padding: '12px 8px' }}>
+                      <span style={{
+                        background: t.type === 'income' ? '#E8F5E9' : '#FFEBEE',
+                        color: t.type === 'income' ? '#4CAF50' : '#F44336',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        fontSize: '0.85em'
+                      }}>
+                        {t.type || 'N/A'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
             </table>
           </div>
         </div>
