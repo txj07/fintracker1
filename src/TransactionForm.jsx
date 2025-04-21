@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 
 const INCOME_CATEGORIES = ['Salary', 'Freelance', 'Investments', 'Gifts', 'Other'];
-const EXPENSE_CATEGORIES = ['Food', 'Rent', 'Transport', 'Utilities', 'Entertainment', 'Other'];
+const EXPENSE_CATEGORIES = ['Bills', 'Food', 'Transport', 'Rent', 'Other'];
+
 
 function TransactionForm({ transactions, setTransactions, editingId, setEditingId, setToast }) {
   const [formData, setFormData] = useState({
