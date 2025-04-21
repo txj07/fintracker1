@@ -1,6 +1,6 @@
 import { useState, memo } from 'react';
 
-const EXPENSE_CATEGORIES = ['Bills', 'Food', 'Transport (Petrol)', 'Rent', 'Miscellaneous'];
+const EXPENSE_CATEGORIES = ['Bills', 'Food', 'Transport', 'Rent', 'Other'];
 
 function BudgetForm({ budgets, setBudgets }) {
   const [category, setCategory] = useState(EXPENSE_CATEGORIES[0]);
