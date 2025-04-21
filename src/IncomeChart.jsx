@@ -1,137 +1,153 @@
+import { useState, useMemo, memo } from 'react';
 import { Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
-
-// Register required ChartJS components
-ChartJS.register(
+import {
+  Chart as ChartJS,
   CategoryScale,
   LinearScale,
   BarElement,
   Title,
   Tooltip,
-  Legend
-);
+  Legend,
+} from 'chart.js';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
 
 function IncomeChart({ transactions }) {
-  // Filter only income transactions
-  const incomes = transactions.filter(t => t.type === 'income');
+  const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1; // 1-12
+  const [month, setMonth] = useState(currentMonth);
+  const [year, setYear] = useState(currentYear);
 
-  if (incomes.length === 0) {
-    return <p>No income data to display</p>;
-  }
+  // Generate year options (1950 to current year + 1)
+  const years = Array.from(
+    { length: currentYear - 1949 + 1 },
+    (_, i) => 1950 + i
+  );
 
-  // Group incomes by month and category
-  const monthlyData = incomes.reduce((acc, transaction) => {
-    const date = new Date(transaction.date);
-    const monthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-    const category = transaction.category || 'Uncategorized';
+  // Combine month and year for filtering
+  const monthYear = `${year}-${month.toString().padStart(2, '0')}`;
 
-    if (!acc[monthYear]) {
-      acc[monthYear] = {};
-    }
+  // Filter income transactions for selected month
+  const filteredIncomes = useMemo(() => {
+    return transactions.filter(
+      (t) => t.type === 'income' && t.date.slice(0, 7) === monthYear
+    );
+  }, [transactions, monthYear]);
 
-    if (!acc[monthYear][category]) {
-      acc[monthYear][category] = 0;
-    }
+  // Calculate income by category
+  const incomeByCategory = useMemo(() => {
+    return filteredIncomes.reduce((acc, t) => {
+      const category = t.category || 'Uncategorized';
+      acc[category] = (acc[category] || 0) + t.amount;
+      return acc;
+    }, {});
+  }, [filteredIncomes]);
 
-    acc[monthYear][category] += transaction.amount;
-    return acc;
-  }, {});
-
-  // Get all unique months sorted chronologically
-  const months = Object.keys(monthlyData).sort((a, b) => new Date(a) - new Date(b));
-  
-  // Get all unique categories
-  const categories = [...new Set(incomes.map(t => t.category || 'Uncategorized'))];
-
-  // Generate consistent colors for each category
-  const backgroundColors = [
-    '#4BC0C0', '#9966FF', '#36A2EB', '#FFCE56', '#FF6384',
-    '#8AC24A', '#FF9F40', '#EA5F89', '#00BBD3', '#F06292'
-  ];
-
-  // Prepare dataset for Chart.js
-  const datasets = categories.map((category, index) => ({
-    label: category,
-    data: months.map(month => monthlyData[month][category] || 0),
-    backgroundColor: backgroundColors[index % backgroundColors.length],
-    borderColor: backgroundColors[index % backgroundColors.length],
-    borderWidth: 1
-  }));
-
-  const data = {
-    labels: months.map(month => {
-      const [year, monthNum] = month.split('-');
-      return new Date(year, monthNum - 1).toLocaleDateString('default', { 
-        month: 'short', 
-        year: '2-digit' 
-      });
-    }),
-    datasets: datasets,
+  // Prepare chart data
+  const categories = Object.keys(incomeByCategory);
+  const chartData = {
+    labels: categories,
+    datasets: [
+      {
+        label: 'Income (₹)',
+        data: categories.map((cat) => incomeByCategory[cat] || 0),
+        backgroundColor: '#4CAF50',
+        borderColor: '#388E3C',
+        borderWidth: 1,
+      },
+    ],
   };
 
-  const options = {
+  const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    scales: {
-      x: {
-        stacked: false, // Set to true if you want stacked bars
-        grid: {
-          display: false
-        }
-      },
-      y: {
-        stacked: false, // Set to true if you want stacked bars
-        beginAtZero: true,
-        grid: {
-          color: '#e0e0e0'
-        },
-        ticks: {
-          callback: function(value) {
-            return '₹' + value;
-          }
-        }
-      }
-    },
     plugins: {
       legend: {
         position: 'top',
         labels: {
-          boxWidth: 12,
-          padding: 20
-        }
-      },
-      tooltip: {
-        callbacks: {
-          label: function(context) {
-            const label = context.dataset.label || '';
-            const value = context.raw || 0;
-            return `${label}: ₹${value.toFixed(2)}`;
-          }
-        }
+          font: { size: 14, family: 'Roboto' },
+          color: '#2c3e50',
+        },
       },
       title: {
         display: true,
-        text: 'Monthly Income',  // Chart title
-        font: {
-          size: 18,
-          weight: 'bold'
+        text: `Monthly Income - ${MONTHS[month - 1]} ${year}`,
+        font: { size: 18, family: 'Roboto', weight: '500' },
+        color: '#2c3e50',
+      },
+      tooltip: {
+        backgroundColor: '#fff',
+        titleColor: '#2c3e50',
+        bodyColor: '#2c3e50',
+        borderColor: '#e2e8f0',
+        borderWidth: 1,
+      },
+    },
+    scales: {
+      x: {
+        ticks: { color: '#2c3e50', font: { family: 'Roboto' } },
+        grid: { display: false },
+      },
+      y: {
+        beginAtZero: true,
+        ticks: {
+          color: '#2c3e50',
+          font: { family: 'Roboto' },
+          callback: (value) => `₹${value}`,
         },
-        padding: {
-          top: 10,
-          bottom: 30
-        }
-      }
-    }
+        grid: { color: '#e2e8f0' },
+      },
+    },
   };
 
   return (
-    <div style={{ height: '400px' }}>
-      <Bar 
-        data={data} 
-        options={options}
-      />
+    <div className="card" role="region" aria-label="Monthly Income Chart">
+      <h3 className="heading">Monthly Income</h3>
+      <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+        <label style={{ marginRight: '10px', fontWeight: '500', color: '#2c3e50' }}>
+          Select Month/Year:
+        </label>
+        <select
+          value={month}
+          onChange={(e) => setMonth(parseInt(e.target.value))}
+          className="form-select"
+          aria-label="Select Month"
+        >
+          {MONTHS.map((monthName, index) => (
+            <option key={index} value={index + 1}>
+              {monthName}
+            </option>
+          ))}
+        </select>
+        <select
+          value={year}
+          onChange={(e) => setYear(parseInt(e.target.value))}
+          className="form-select"
+          aria-label="Select Year"
+        >
+          {years.map((year) => (
+            <option key={year} value={year}>
+              {year}
+            </option>
+          ))}
+        </select>
+      </div>
+      {categories.length === 0 ? (
+        <p style={{ color: '#666', margin: '10px 0' }} role="alert" aria-live="polite">
+          No income for {MONTHS[month - 1]} {year}.
+        </p>
+      ) : (
+        <div style={{ height: '400px' }} role="region" aria-live="polite">
+          <Bar data={chartData} options={chartOptions} />
+        </div>
+      )}
     </div>
   );
 }
 
-export default IncomeChart;
+export default memo(IncomeChart);
